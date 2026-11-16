@@ -1,0 +1,12 @@
+* { box-sizing: border-box; font-family: sans-serif; }
+body { background-color: #f4f4f9; display: flex; justify-content: center; padding-top: 50px; }
+.container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+h2 { margin-top: 0; color: #333; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; color: #666; }
+input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+button { width: 100%; padding: 10px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+button:hover { background: #004494; }
+.success { color: green; font-weight: bold; background: #e8f5e9; padding: 10px; border-radius: 4px; }
+.error { color: red; font-weight: bold; background: #ffebee; padding: 10px; border-radius: 4px; }
+
