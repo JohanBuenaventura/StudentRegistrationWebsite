@@ -169,3 +169,59 @@ mysql -h 192.168.1.10 -u dbadmin -p -D student_registration -e "DELETE FROM stud
 # Insert the 5 sample WMSU students
 mysql -h 192.168.1.10 -u dbadmin -p < /var/www/html/dummy.sql
 ```
+
+---
+
+## 💻 Migrating / Installing on Another Laptop or PC
+
+### Option A: Manual Setup on a New Machine
+
+1. **Install Web Server & PHP (WSL Ubuntu or Linux):**
+   ```bash
+   sudo apt update
+   sudo apt install -y apache2 php libapache2-mod-php php-mysql mariadb-client
+   sudo systemctl enable --now apache2
+   ```
+   *(Verify PHP `pdo_mysql` and `fileinfo` are enabled with `php -m`.)*
+
+2. **Clone the Repository & Create Private Upload Directory:**
+   ```bash
+   git clone https://github.com/JohanBuenaventura/StudentRegistrationWebsite.git /var/www/html
+   sudo chown -R $USER:www-data /var/www/html
+   sudo mkdir -p /var/www/wmsu_uploads
+   sudo chown www-data:www-data /var/www/wmsu_uploads
+   sudo chmod 750 /var/www/wmsu_uploads
+   ```
+   *(If coding from a Windows folder, clone to Windows and use `sync-to-wsl.ps1` to sync to `/var/www/html`.)*
+
+3. **Set Up MariaDB (Kali VM or Local MariaDB Server):**
+   * On the database machine, install `mariadb-server`, set `bind-address = 0.0.0.0` in `/etc/mysql/mariadb.conf.d/50-server.cnf` (if connecting remotely), and restart MariaDB (`sudo systemctl restart mariadb`).
+   * Create the `dbadmin` user and import `schema.sql` inside `sudo mysql`:
+     ```sql
+     CREATE USER IF NOT EXISTS 'dbadmin'@'%' IDENTIFIED BY 'password123';
+     GRANT ALL PRIVILEGES ON student_registration.* TO 'dbadmin'@'%';
+     FLUSH PRIVILEGES;
+     ```
+     ```bash
+     sudo mysql < /var/www/html/schema.sql
+     ```
+   * *(Optional)* Load sample students: `sudo mysql < /var/www/html/dummy.sql`.
+
+4. **Point the App to Your Database Host:**
+   * Update `$host` in `db_config.php` to your database IP (use `'127.0.0.1'` if MariaDB runs on the same machine), or set the `DB_HOST` environment variable.
+   * Open `http://localhost/login.php` (`admin` / `admin123`) or `http://localhost/register_account.php`.
+
+---
+
+### Option B: One-Prompt Setup Using an AI Agent (`agy`, Codex, Cursor, Claude Code)
+
+If you are moving this project to a new laptop/PC, clone the repository, open it in your AI coding agent, and paste this prompt:
+
+```text
+Set up and verify the WMSU Student Registration System on this machine:
+1. Inspect the OS/WSL environment, Apache2, PHP 8+ (ensure pdo_mysql and fileinfo extensions are enabled), and MariaDB availability.
+2. Deploy the project to Apache's web root (/var/www/html) and create the private upload directory (/var/www/wmsu_uploads) owned by www-data:www-data with chmod 750.
+3. Configure MariaDB (either local or my remote Kali VM IP): create the `dbadmin` user if missing, apply `schema.sql` for a fresh database (or `migrations/001_online_enrollment.sql` if `student_registration` already exists), and optionally load `dummy.sql`.
+4. Update `$host` in `db_config.php` (or configure `DB_HOST`) to match the database IP without committing secrets.
+5. Run `php -l` on all PHP files, verify database connectivity, and confirm `http://localhost/login.php` and `http://localhost/register_account.php` return HTTP 200.
+```
