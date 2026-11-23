@@ -2,7 +2,7 @@
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/includes/auth.php';
 
-require_login();
+require_role('admin', 'registrar');
 
 $queryInfo = build_student_filter_query($_GET);
 

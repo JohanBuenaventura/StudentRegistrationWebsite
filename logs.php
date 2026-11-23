@@ -2,7 +2,7 @@
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/includes/layout.php';
 
-require_login();
+require_role('admin', 'registrar');
 
 $actionFilter = trim($_GET['action'] ?? '');
 $availableActions = [

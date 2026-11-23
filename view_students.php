@@ -2,6 +2,8 @@
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/includes/layout.php';
 
+require_role('admin', 'registrar');
+
 $courses = fetch_courses($pdo);
 $statuses = allowed_statuses();
 $campuses = allowed_campuses();

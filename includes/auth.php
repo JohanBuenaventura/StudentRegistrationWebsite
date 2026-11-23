@@ -28,13 +28,56 @@ function current_user(): ?array
 }
 
 /**
+ * Check whether the signed-in user has one of the given roles.
+ */
+function has_role(string ...$roles): bool
+{
+    $user = current_user();
+    if (!$user || !isset($user['role'])) {
+        return false;
+    }
+    return in_array($user['role'], $roles, true);
+}
+
+/**
+ * Return the default landing URL for a given role.
+ */
+function role_home_url(?string $role = null): string
+{
+    $role ??= current_user()['role'] ?? '';
+    return $role === 'student' ? 'student/dashboard.php' : 'registrar/dashboard.php';
+}
+
+/**
+ * Compute relative path prefix to the web root ('' or '../').
+ */
+function base_path_prefix(): string
+{
+    $dir = basename(dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    return in_array($dir, ['student', 'registrar', 'admin'], true) ? '../' : '';
+}
+
+/**
  * Redirect unauthenticated visitors to login.php.
  */
 function require_login(): void
 {
     if (!is_logged_in()) {
         set_flash('error', 'Please sign in to access that page or perform that action.');
-        header('Location: login.php');
+        header('Location: ' . base_path_prefix() . 'login.php');
+        exit;
+    }
+}
+
+/**
+ * Enforce role-based authorization on protected pages and actions.
+ */
+function require_role(string ...$roles): void
+{
+    require_login();
+    if (!has_role(...$roles)) {
+        set_flash('error', 'You do not have permission to access that page.');
+        header('Location: ' . base_path_prefix() . role_home_url());
         exit;
     }
 }
@@ -138,6 +181,29 @@ function allowed_campuses(): array
 function allowed_semesters(): array
 {
     return ['1st Semester', '2nd Semester', 'Summer'];
+}
+
+/**
+ * Allowed online application statuses.
+ */
+function allowed_application_statuses(): array
+{
+    return ['Draft', 'Submitted', 'Under Review', 'Requires Correction', 'Approved', 'Rejected'];
+}
+
+/**
+ * Map application status to a CSS badge class.
+ */
+function app_status_badge_class(string $status): string
+{
+    return match ($status) {
+        'Approved'            => 'badge-active',
+        'Submitted',
+        'Under Review'        => 'badge-graduated',
+        'Requires Correction' => 'badge-pending',
+        'Rejected'            => 'badge-inactive',
+        default               => 'badge-action',
+    };
 }
 
 /**

@@ -3,7 +3,7 @@ require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/includes/layout.php';
 
 if (is_logged_in()) {
-    header('Location: index.php');
+    header('Location: ' . role_home_url());
     exit;
 }
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmt = $pdo->prepare(
-                'SELECT id, username, full_name, password_hash, role
+                'SELECT id, username, full_name, email, password_hash, role, is_active, student_id
                  FROM users
                  WHERE username = :username
                  LIMIT 1'
@@ -38,19 +38,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute(['username' => $usernameInput]);
             $user = $stmt->fetch();
 
-            if ($user && password_verify($passwordInput, $user['password_hash'])) {
+            if ($user && !(int)($user['is_active'] ?? 1)) {
+                $error = 'This account is currently inactive. Please contact the Registrar.';
+            } elseif ($user && password_verify($passwordInput, $user['password_hash'])) {
                 unset($_SESSION['login_attempts']);
                 session_regenerate_id(true);
                 $_SESSION['user'] = [
-                    'id'        => (int)$user['id'],
-                    'username'  => $user['username'],
-                    'full_name' => $user['full_name'],
-                    'role'      => $user['role'],
+                    'id'         => (int)$user['id'],
+                    'username'   => $user['username'],
+                    'full_name'  => $user['full_name'],
+                    'email'      => $user['email'] ?? null,
+                    'role'       => $user['role'],
+                    'student_id' => $user['student_id'] !== null ? (int)$user['student_id'] : null,
                 ];
 
                 log_activity($pdo, 'LOGIN_SUCCESS', 'auth', (int)$user['id'], 'Signed in to WMSU Registrar Portal');
                 set_flash('success', 'Welcome back, ' . $user['full_name'] . '.');
-                header('Location: index.php');
+                header('Location: ' . role_home_url($user['role']));
                 exit;
             }
 
@@ -123,7 +127,10 @@ render_header('Sign In', 'login');
     </form>
 
     <p class="helper-note">
-        Default seeded account: <code>admin</code> / <code>admin123</code> (change after setup).
+        New student applicant? <a href="register_account.php">Create a student account</a>
+    </p>
+    <p class="helper-note">
+        Default seeded staff account: <code>admin</code> / <code>admin123</code> (change after setup).
     </p>
 </section>
 

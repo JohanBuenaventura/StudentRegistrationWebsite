@@ -2,7 +2,7 @@
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/includes/layout.php';
 
-require_login();
+require_role('admin', 'registrar');
 
 $editId = filter_input(INPUT_GET, 'edit', FILTER_VALIDATE_INT);
 $editingCourse = null;
