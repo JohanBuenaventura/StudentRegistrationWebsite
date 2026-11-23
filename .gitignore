@@ -7,3 +7,10 @@
 # OS Generated Files
 .DS_Store
 Thumbs.db
+
+# Uploads, Backups & Local Secrets
+wmsu_uploads/
+uploads_private/
+*backup*.sql
+*.bak
+.env
