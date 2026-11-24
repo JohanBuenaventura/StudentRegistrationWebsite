@@ -14,3 +14,5 @@ uploads_private/
 *backup*.sql
 *.bak
 .env
+
+db_config.php
